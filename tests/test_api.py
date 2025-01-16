@@ -1,11 +1,14 @@
 import pytest
 from fastapi.testclient import TestClient
-from API.main import app  # Assuming your FastAPI app is in API.main
+from unittest.mock import patch, MagicMock
+from API.main import app
+
 
 @pytest.fixture
 def client():
     """Fixture to create a TestClient for FastAPI"""
     return TestClient(app)
+
 
 @pytest.fixture
 def housing_data():
@@ -21,8 +24,15 @@ def housing_data():
         "Longitude": -122.23
     }
 
-def test_predict(client, housing_data):
+
+@patch("API.main.mlflow.pyfunc.load_model")
+def test_predict(mock_load_model, client, housing_data):
     """Test the /predict/ endpoint of the API"""
+
+    # Mock the model's predict method
+    mock_model = MagicMock()
+    mock_model.predict.return_value = [123456]  # Example prediction value
+    mock_load_model.return_value = mock_model
 
     # Send POST request to /predict/ endpoint with input data
     response = client.post("/predict/", json=housing_data)
@@ -34,3 +44,4 @@ def test_predict(client, housing_data):
     response_data = response.json()
     assert "predicted_house_value" in response_data, "Response should contain 'predicted_house_value' key"
     assert isinstance(response_data['predicted_house_value'], (int, float)), "Predicted value should be a number"
+    assert response_data['predicted_house_value'] == 123456, "Predicted value should match the mock value"
