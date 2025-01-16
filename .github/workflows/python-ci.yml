@@ -3,10 +3,10 @@ name: Python CI
 on:
   push:
     branches:
-      - main  # Déclenche l'action lorsque tu pushes sur la branche main
+      - master  # Déclenche l'action lorsque tu pushes sur la branche main
   pull_request:
     branches:
-      - main  # Déclenche aussi l'action lors des pull requests vers la branche main
+      - master  # Déclenche aussi l'action lors des pull requests vers la branche main
 
 jobs:
   test:
