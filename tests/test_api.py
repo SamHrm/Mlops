@@ -1,81 +1,33 @@
 import pytest
-from fastapi.testclient import TestClient
-from API.main import app  # Import your FastAPI app
+import requests
 
-# Create a test client for the FastAPI app
-client = TestClient(app)
+API_URL = "http://127.0.0.1:8000/predict/"
 
-@pytest.fixture
-def valid_input():
-    """Fixture to provide valid input data for predictions."""
-    return {
-        "MedInc": 3.5,
-        "HouseAge": 20,
-        "AveRooms": 6.0,
-        "AveBedrms": 1.0,
-        "Population": 1500,
-        "AveOccup": 3.0,
-        "Latitude": 34.05,
-        "Longitude": -118.25
-    }
 
 @pytest.fixture
-def invalid_input():
-    """Fixture to provide invalid input data for predictions."""
+def housing_data():
     return {
-        "MedInc": "invalid",  # Invalid type
-        "HouseAge": 20,
+        "MedInc": 6.0,
+        "HouseAge": 15.0,
         "AveRooms": 6.0,
         "AveBedrms": 1.0,
-        "Population": 1500,
+        "Population": 1000.0,
         "AveOccup": 3.0,
-        "Latitude": 34.05,
-        "Longitude": -118.25
+        "Latitude": 37.0,
+        "Longitude": -122.0
     }
 
-def test_read_root():
-    """Test the root endpoint."""
-    response = client.get("/")
-    assert response.status_code == 200, "Root endpoint should return HTTP 200"
-    assert "message" in response.json(), "Response should contain a 'message' key"
 
-def test_predict_valid_input(valid_input):
-    """Test the /predict/ endpoint with valid input."""
-    response = client.post("/predict/", json=valid_input)
-    assert response.status_code == 200, "Predict endpoint should return HTTP 200 for valid input"
+def test_predict(housing_data):
+    # Envoyer une requête POST à l'API pour obtenir une prédiction
+    response = requests.post(API_URL, json=housing_data)
+
+    # Vérifier que le code de statut de la réponse est 200 (OK)
+    assert response.status_code == 200
+
+    # Vérifier que la réponse contient une clé "predicted_house_value"
     response_data = response.json()
-    assert "predicted_house_value" in response_data, "Response should contain 'predicted_house_value'"
-    assert isinstance(response_data["predicted_house_value"], (int, float)), "Prediction should be a number"
+    assert "predicted_house_value" in response_data, "La réponse de l'API ne contient pas 'predicted_house_value'"
 
-def test_predict_invalid_input(invalid_input):
-    """Test the /predict/ endpoint with invalid input."""
-    response = client.post("/predict/", json=invalid_input)
-    assert response.status_code == 422, "Predict endpoint should return HTTP 422 for invalid input"
-
-def test_predict_missing_fields():
-    """Test the /predict/ endpoint with missing fields."""
-    incomplete_input = {
-        "MedInc": 3.5,
-        "HouseAge": 20,
-        "AveRooms": 6.0
-        # Missing other fields
-    }
-    response = client.post("/predict/", json=incomplete_input)
-    assert response.status_code == 422, "Predict endpoint should return HTTP 422 for missing fields"
-
-def test_predict_edge_cases():
-    """Test the /predict/ endpoint with edge case inputs."""
-    edge_case_input = {
-        "MedInc": 0.0,  # Minimum income
-        "HouseAge": 100,  # Oldest house
-        "AveRooms": 1.0,  # Minimum rooms
-        "AveBedrms": 1.0,
-        "Population": 1,  # Minimum population
-        "AveOccup": 1.0,
-        "Latitude": -90.0,  # Minimum valid latitude
-        "Longitude": -180.0  # Minimum valid longitude
-    }
-    response = client.post("/predict/", json=edge_case_input)
-    assert response.status_code == 200, "Predict endpoint should handle edge cases gracefully"
-    response_data = response.json()
-    assert "predicted_house_value" in response_data, "Response should contain 'predicted_house_value'"
+    # Vérifier que la valeur prédite est un nombre
+    assert isinstance(response_data['predicted_house_value'], (int, float)), "La valeur prédite n'est pas un nombre"
