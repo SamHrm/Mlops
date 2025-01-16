@@ -1,3 +1,4 @@
+import os
 import mlflow
 import mlflow.pyfunc
 from fastapi import FastAPI
@@ -8,7 +9,7 @@ import pandas as pd
 # Définir FastAPI
 app = FastAPI()
 
-model_uri = "runs:/76a6e2e2f0544e7399c3a64ae086bfff/random_forest_model"
+model_uri = os.getenv("MODEL_URI", "runs:/76a6e2e2f0544e7399c3a64ae086bfff/random_forest_model")
 
 # Charger le modèle depuis MLflow
 model = mlflow.pyfunc.load_model(model_uri)
