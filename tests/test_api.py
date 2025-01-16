@@ -1,33 +1,22 @@
 import pytest
-import requests
-
-API_URL = "http://127.0.0.1:8000/predict/"
-
+from fastapi.testclient import TestClient
+from API.main import app  # Assuming your FastAPI app is in API.main
 
 @pytest.fixture
-def housing_data():
-    return {
-        "MedInc": 6.0,
-        "HouseAge": 15.0,
-        "AveRooms": 6.0,
-        "AveBedrms": 1.0,
-        "Population": 1000.0,
-        "AveOccup": 3.0,
-        "Latitude": 37.0,
-        "Longitude": -122.0
-    }
+def client():
+    """Fixture to create a TestClient for FastAPI"""
+    return TestClient(app)
 
+def test_predict(client, housing_data):
+    """Test the /predict/ endpoint of the API"""
 
-def test_predict(housing_data):
-    # Envoyer une requête POST à l'API pour obtenir une prédiction
-    response = requests.post(API_URL, json=housing_data)
+    # Send POST request to /predict/ endpoint with input data
+    response = client.post("/predict/", json=housing_data)
 
-    # Vérifier que le code de statut de la réponse est 200 (OK)
-    assert response.status_code == 200
+    # Check if the request was successful
+    assert response.status_code == 200, f"Expected status code 200 but got {response.status_code}"
 
-    # Vérifier que la réponse contient une clé "predicted_house_value"
+    # Check if the response contains the predicted house value
     response_data = response.json()
-    assert "predicted_house_value" in response_data, "La réponse de l'API ne contient pas 'predicted_house_value'"
-
-    # Vérifier que la valeur prédite est un nombre
-    assert isinstance(response_data['predicted_house_value'], (int, float)), "La valeur prédite n'est pas un nombre"
+    assert "predicted_house_value" in response_data, "Response should contain 'predicted_house_value' key"
+    assert isinstance(response_data['predicted_house_value'], (int, float)), "Predicted value should be a number"
