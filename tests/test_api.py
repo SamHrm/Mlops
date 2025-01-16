@@ -3,21 +3,14 @@ from fastapi.testclient import TestClient
 from fastapi import FastAPI
 from pydantic import BaseModel
 import mlflow.pyfunc
+from API.main import app
 
-# Assume the FastAPI app is in a file called 'main.py'
-from API.main import app  # Make sure the FastAPI app is imported from the correct file
+# Set the local path to the model stored in your mlruns directory
+# Use the local file path URI format for mlflow
+model_local_path = "mlruns/models/CaliforniaHousingRandomForest/version-1"
 
-# Set the MLflow tracking URI (if it's a remote server, make sure it's set to the correct address)
-# For local usage, this is not necessary if it's running locally with the default URI.
-import mlflow
-
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
-
-# MLflow model URI (from the run ID on the MLflow server)
-model_uri = 'runs:/76a6e2e2f0544e7399c3a64ae086bfff/random_forest_model'
-
-# Load the model from MLflow (make sure the server is running and the model exists)
-model = mlflow.pyfunc.load_model(model_uri)
+# Load the model from the local path
+model = mlflow.pyfunc.load_model(model_local_path)
 
 # Create the TestClient instance to simulate HTTP requests to your FastAPI app
 client = TestClient(app)
